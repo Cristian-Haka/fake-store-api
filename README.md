@@ -282,6 +282,14 @@ fields:
 POST:
 
 - /auth/login
+## Seeding the database
+
+Run the following command to populate the MongoDB collections:
+
+```bash
+node scripts/seed.js
+```
+
 
 ## ToDo
 
