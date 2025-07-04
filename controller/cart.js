@@ -47,64 +47,73 @@ module.exports.getSingleCart = (req, res) => {
 		.catch((err) => console.log(err));
 };
 
-module.exports.addCart = (req, res) => {
-	if (typeof req.body == undefined) {
-		res.json({
-			status: 'error',
-			message: 'data is undefined',
-		});
-	} else {
-		//     let cartCount = 0;
-		// Cart.find().countDocuments(function (err, count) {
-		//   cartCount = count
-		//   })
-
-		//     .then(() => {
-		const cart = {
-			id: 11,
-			userId: req.body.userId,
-			date: req.body.date,
-			products: req.body.products,
-		};
-		// cart.save()
-		//   .then(cart => res.json(cart))
-		//   .catch(err => console.log(err))
-
-		res.json(cart);
-		// })
-
-		//res.json({...req.body,id:Cart.find().count()+1})
-	}
+module.exports.addCart = async (req, res) => {
+        if (typeof req.body == undefined) {
+                res.json({
+                        status: 'error',
+                        message: 'data is undefined',
+                });
+        } else {
+                try {
+                        const count = await Cart.countDocuments();
+                        const cart = new Cart({
+                                id: count + 1,
+                                userId: req.body.userId,
+                                date: req.body.date,
+                                products: req.body.products,
+                        });
+                        const savedCart = await cart.save();
+                        res.json(savedCart);
+                } catch (err) {
+                        console.log(err);
+                }
+        }
 };
 
-module.exports.editCart = (req, res) => {
-	if (typeof req.body == undefined || req.params.id == null) {
-		res.json({
-			status: 'error',
-			message: 'something went wrong! check your sent data',
-		});
-	} else {
-		res.json({
-			id: parseInt(req.params.id),
-			userId: req.body.userId,
-			date: req.body.date,
-			products: req.body.products,
-		});
-	}
+module.exports.editCart = async (req, res) => {
+        if (typeof req.body == undefined || req.params.id == null) {
+                res.json({
+                        status: 'error',
+                        message: 'something went wrong! check your sent data',
+                });
+        } else {
+                try {
+                        const cart = await Cart.findOne({ id: req.params.id });
+                        if (!cart) {
+                                return res.json({});
+                        }
+                        const updatedCart = await Cart.findByIdAndUpdate(
+                                cart._id,
+                                {
+                                        userId: req.body.userId,
+                                        date: req.body.date,
+                                        products: req.body.products,
+                                },
+                                { new: true }
+                        );
+                        res.json(updatedCart);
+                } catch (err) {
+                        console.log(err);
+                }
+        }
 };
 
-module.exports.deleteCart = (req, res) => {
-	if (req.params.id == null) {
-		res.json({
-			status: 'error',
-			message: 'cart id should be provided',
-		});
-	} else {
-		Cart.findOne({ id: req.params.id })
-			.select('-_id -products._id')
-			.then((cart) => {
-				res.json(cart);
-			})
-			.catch((err) => console.log(err));
-	}
+module.exports.deleteCart = async (req, res) => {
+        if (req.params.id == null) {
+                res.json({
+                        status: 'error',
+                        message: 'cart id should be provided',
+                });
+        } else {
+                try {
+                        const cart = await Cart.findOne({ id: req.params.id });
+                        if (!cart) {
+                                return res.json(null);
+                        }
+                        const deletedCart = await Cart.findByIdAndDelete(cart._id);
+                        res.json(deletedCart);
+                } catch (err) {
+                        console.log(err);
+                }
+        }
 };

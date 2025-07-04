@@ -52,67 +52,77 @@ module.exports.getProductsInCategory = (req, res) => {
 		.catch((err) => console.log(err));
 };
 
-module.exports.addProduct = (req, res) => {
-	if (typeof req.body == undefined) {
-		res.json({
-			status: 'error',
-			message: 'data is undefined',
-		});
-	} else {
-		// let productCount = 0;
-		// Product.find()
-		//   .countDocuments(function (err, count) {
-		//     productCount = count;
-		//   })
-		//   .then(() => {
-		const product = {
-			id: 21,
-			title: req.body.title,
-			price: req.body.price,
-			description: req.body.description,
-			image: req.body.image,
-			category: req.body.category,
-		};
-		// product.save()
-		//   .then(product => res.json(product))
-		//   .catch(err => console.log(err))
-		res.json(product);
-		// });
-	}
+module.exports.addProduct = async (req, res) => {
+        if (typeof req.body == undefined) {
+                res.json({
+                        status: 'error',
+                        message: 'data is undefined',
+                });
+        } else {
+                try {
+                        const count = await Product.countDocuments();
+                        const product = new Product({
+                                id: count + 1,
+                                title: req.body.title,
+                                price: req.body.price,
+                                description: req.body.description,
+                                image: req.body.image,
+                                category: req.body.category,
+                        });
+                        const savedProduct = await product.save();
+                        res.json(savedProduct);
+                } catch (err) {
+                        console.log(err);
+                }
+        }
 };
 
-module.exports.editProduct = (req, res) => {
-	if (typeof req.body == undefined || req.params.id == null) {
-		res.json({
-			status: 'error',
-			message: 'something went wrong! check your sent data',
-		});
-	} else {
-		res.json({
-			id: parseInt(req.params.id),
-			title: req.body.title,
-			price: req.body.price,
-			description: req.body.description,
-			image: req.body.image,
-			category: req.body.category,
-		});
-	}
+module.exports.editProduct = async (req, res) => {
+        if (typeof req.body == undefined || req.params.id == null) {
+                res.json({
+                        status: 'error',
+                        message: 'something went wrong! check your sent data',
+                });
+        } else {
+                try {
+                        const product = await Product.findOne({ id: req.params.id });
+                        if (!product) {
+                                return res.json({});
+                        }
+                        const updatedProduct = await Product.findByIdAndUpdate(
+                                product._id,
+                                {
+                                        title: req.body.title,
+                                        price: req.body.price,
+                                        description: req.body.description,
+                                        image: req.body.image,
+                                        category: req.body.category,
+                                },
+                                { new: true }
+                        );
+                        res.json(updatedProduct);
+                } catch (err) {
+                        console.log(err);
+                }
+        }
 };
 
-module.exports.deleteProduct = (req, res) => {
-	if (req.params.id == null) {
-		res.json({
-			status: 'error',
-			message: 'cart id should be provided',
-		});
-	} else {
-		Product.findOne({
-			id: req.params.id,
-		})
-			.select(['-_id'])
-			.then((product) => {
-				res.json(product);
-			})
-			.catch((err) => console.log(err));
-	}
+module.exports.deleteProduct = async (req, res) => {
+        if (req.params.id == null) {
+                res.json({
+                        status: 'error',
+                        message: 'cart id should be provided',
+                });
+        } else {
+                try {
+                        const product = await Product.findOne({ id: req.params.id });
+                        if (!product) {
+                                return res.json(null);
+                        }
+                        const deleted = await Product.findByIdAndDelete(product._id);
+                        res.json(deleted);
+                } catch (err) {
+                        console.log(err);
+                }
+        }
 };
