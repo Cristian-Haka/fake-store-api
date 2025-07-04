@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const dotenvExpand = require('dotenv-expand');
+const bcrypt = require('bcrypt');
 
 const Product = require('../model/product');
 const Cart = require('../model/cart');
@@ -99,6 +100,10 @@ async function seed() {
       useNewUrlParser: true,
       useUnifiedTopology: true
     });
+
+    for (const user of users) {
+      user.password = await bcrypt.hash(user.password, 10);
+    }
 
     await Product.deleteMany({});
     await Cart.deleteMany({});
