@@ -1,4 +1,5 @@
 const User = require('../model/user');
+const bcrypt = require('bcrypt');
 
 module.exports.getAllUser = (req, res) => {
 	const limit = Number(req.query.limit) || 0;
@@ -38,11 +39,12 @@ module.exports.addUser = async (req, res) => {
         } else {
                 try {
                         const count = await User.countDocuments();
+                        const hashedPassword = await bcrypt.hash(req.body.password, 10);
                         const user = new User({
                                 id: count + 1,
                                 email: req.body.email,
                                 username: req.body.username,
-                                password: req.body.password,
+                                password: hashedPassword,
                                 name: {
                                         firstname: req.body.firstname,
                                         lastname: req.body.lastname,
@@ -79,12 +81,13 @@ module.exports.editUser = async (req, res) => {
                         if (!user) {
                                 return res.json({});
                         }
+                        const hashedPassword = await bcrypt.hash(req.body.password, 10);
                         const updatedUser = await User.findByIdAndUpdate(
                                 user._id,
                                 {
                                         email: req.body.email,
                                         username: req.body.username,
-                                        password: req.body.password,
+                                        password: hashedPassword,
                                         name: {
                                                 firstname: req.body.firstname,
                                                 lastname: req.body.lastname,
